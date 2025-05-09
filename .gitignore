@@ -1,0 +1,9 @@
+
+*.pyc
+*.tar.gz
+*.whl
+*.whl.part
+*.whl.part.tmp
+*.whl.tmp
+*.whl.tmp.part
+*.whl.tmp.part.tmp
