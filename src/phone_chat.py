@@ -16,7 +16,7 @@ from pipecat.processors.aggregators.llm_response import (
     LLMUserResponseAggregator,
 )
 from pipecat.services.elevenlabs import ElevenLabsTTSService
-from pipecat.transports.services.daily import DailyParams, DailyTransport
+from pipecat.transports.services.daily import DailyParams, DaTransport
 from loguru import logger
 import uvicorn
 import asyncio
