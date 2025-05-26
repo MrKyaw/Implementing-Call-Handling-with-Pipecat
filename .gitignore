@@ -7,3 +7,4 @@
 *.whl.tmp
 *.whl.tmp.part
 *.whl.tmp.part.tmp
+.DS_Store

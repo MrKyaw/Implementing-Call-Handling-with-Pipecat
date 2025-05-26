@@ -1,5 +1,3 @@
-
-
 import os
 import time
 from datetime import datetime
@@ -21,10 +19,15 @@ from loguru import logger
 import uvicorn
 import asyncio
 import requests  # For Deepseek API
+import redis  # Add this import for Redis
+import hashlib  # For cache key hashing
 
 # Load environment variables
 from dotenv import load_dotenv
 load_dotenv()
+
+# Initialize Redis client (add after loading environment variables)
+redis_client = redis.Redis(host=os.getenv("REDIS_HOST", "localhost"), port=int(os.getenv("REDIS_PORT", 6379)), db=0, decode_responses=True)
 
 # --------------------------
 # Configuration
@@ -63,6 +66,11 @@ class DeepseekLLMService:
         
     async def process_frame(self, frame):
         if isinstance(frame, TextFrame):
+            # Use the text as the cache key (hashed)
+            cache_key = f"llm_cache:{hashlib.sha256(frame.text.encode()).hexdigest()}"
+            cached_response = redis_client.get(cache_key)
+            if cached_response:
+                return TextFrame(cached_response)
             headers = {
                 "Authorization": f"Bearer {self.api_key}",
                 "Content-Type": "application/json"
@@ -82,7 +90,10 @@ class DeepseekLLMService:
                 )
                 response.raise_for_status()
                 result = response.json()
-                return TextFrame(result["choices"][0]["message"]["content"])
+                llm_reply = result["choices"][0]["message"]["content"]
+                # Cache the response for 60 seconds
+                redis_client.setex(cache_key, 60, llm_reply)
+                return TextFrame(llm_reply)
             except Exception as e:
                 logger.error(f"Deepseek API error: {str(e)}")
                 return TextFrame("Sorry, I encountered an error. Please try again.")
@@ -292,7 +303,7 @@ Our Implementation: We explicitly handle this endpoint with:
 python
 @app.get('/favicon.ico', include_in_schema=False)
 async def favicon():
-    return Response(status_code=204)  # No content response
+    return Response(status_code=204)
 204 Response: This tells the browser "success, but no icon to display"
 
 The complete solution I provided earlier has all your requested features working:
